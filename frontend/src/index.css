@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  --ts-bg: #05070a;
+  --ts-bg-panel: #0b0f14;
+  --ts-border: #1c2530;
+  --ts-text-primary: #e8edf2;
+  --ts-text-dim: #6b7684;
+  --ts-accent: #00e0a8;
+  --ts-accent-dim: #00996f;
+  --ts-warn: #ffb020;
+  --ts-danger: #ff4d4d;
+  --ts-glow: 0 0 24px rgba(0, 224, 168, 0.25);
+  --ts-font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  --ts-font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--ts-bg);
+  color: var(--ts-text-primary);
+  font-family: var(--ts-font-sans);
+}
+
+.font-telemetry {
+  font-family: var(--ts-font-mono);
+  letter-spacing: 0.05em;
+}
