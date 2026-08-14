@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
-from app.services.wetness import compute_wetness_score
+from app.services.wetness import compute_wetness_score, label_for_wetness
 from app.services.zones import get_zone_crops
 from app.services.trend import record_reading, get_trend
 from app.services.thermal_sim import simulate_thermal_score
@@ -41,9 +41,13 @@ async def analyze_frame(file: UploadFile = File(...)):
         record_reading(name, fusion["fused_wetness"])
         trend = get_trend(name)
 
+        # Label is derived from the SAME fused/smoothed value shown as the
+        # zone's %, so the label can never contradict the number next to it.
+        zone_label = label_for_wetness(fusion["fused_wetness"])
+
         zone_results[name] = {
             "wetness_score": smoothed_vision,
-            "label": result["label"],
+            "label": zone_label,
             "thermal_score": smoothed_thermal,
             "fusion": fusion,
             "trend": trend,

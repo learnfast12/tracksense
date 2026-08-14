@@ -50,7 +50,41 @@ export default function LiveFeed({ onFrame }) {
       <div className="relative rounded overflow-hidden" style={{ aspectRatio: '16/9', background: '#000' }}>
         <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
         <canvas ref={canvasRef} className="hidden" />
+
+        {status === 'live' && (
+          <>
+            {/* Sweeping scan line */}
+            <div
+              className="absolute left-0 w-full pointer-events-none"
+              style={{
+                height: '2px',
+                background: 'linear-gradient(90deg, transparent, var(--ts-accent), transparent)',
+                boxShadow: '0 0 8px var(--ts-accent)',
+                animation: 'ts-scan-sweep 3s linear infinite',
+              }}
+            />
+            {/* Faint scanline texture overlay for telemetry feel */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  'repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 3px)',
+              }}
+            />
+            {/* Corner brackets — telemetry framing */}
+            <div className="absolute inset-2 pointer-events-none" style={{ border: '1px solid rgba(255,255,255,0.08)' }} />
+          </>
+        )}
       </div>
+
+      <style>{`
+        @keyframes ts-scan-sweep {
+          0%   { top: 0%; opacity: 0; }
+          5%   { opacity: 1; }
+          95%  { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}</style>
     </Panel>
   )
 }

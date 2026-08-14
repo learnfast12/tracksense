@@ -9,15 +9,30 @@ def _tyre_for_wetness(wetness: float) -> str:
         return "Full Wets"
 
 
+def _confidence_hedge(confidence: float) -> str | None:
+    """
+    Returns a hedge prefix for low/medium confidence readings, or None
+    when confidence is high enough that the call can be stated plainly.
+    Keeps the message tone honest relative to the number shown next to it,
+    instead of stating every call with the same flat certainty.
+    """
+    if confidence < 40:
+        return "Low confidence —"
+    elif confidence < 65:
+        return "Moderate confidence —"
+    return None
+
+
 def get_tyre_strategy(overall_wetness: float, trend_direction: str, trend_velocity: float, confidence: float) -> dict:
     """
     Tyre pick and message are derived from the SAME branch, never independently,
-    so they can never contradict each other on the dashboard.
+    so they can never contradict each other on the dashboard. Message tone is
+    also scaled by confidence so a shaky reading never sounds as certain as a
+    clean one.
     """
     WETTING_ESCALATION_THRESHOLD = 3.0  # pts/min — fast enough to jump the tyre call early
 
     if trend_direction == "wetting" and abs(trend_velocity) >= WETTING_ESCALATION_THRESHOLD:
-        # Conditions worsening fast enough that we escalate ahead of the raw wetness score
         base_tyre = _tyre_for_wetness(overall_wetness)
         tyre = "Full Wets" if base_tyre != "Full Wets" else base_tyre
         message = f"Conditions worsening fast ({abs(trend_velocity):.1f} pts/min) — switch to {tyre} now"
@@ -34,6 +49,10 @@ def get_tyre_strategy(overall_wetness: float, trend_direction: str, trend_veloci
     else:
         tyre = _tyre_for_wetness(overall_wetness)
         message = f"Stable — hold {tyre}"
+
+    hedge = _confidence_hedge(confidence)
+    if hedge:
+        message = f"{hedge} {message[0].lower()}{message[1:]}"
 
     return {
         "recommended_tyre": tyre,

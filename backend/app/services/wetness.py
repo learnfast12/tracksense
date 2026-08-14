@@ -46,3 +46,19 @@ def compute_wetness_score(frame: np.ndarray) -> dict:
             "texture_score": round(float(texture_score), 1),
         }
     }
+
+
+def label_for_wetness(wetness: float) -> str:
+    """
+    Same thresholds as compute_wetness_score's internal labeling, but callable
+    on any wetness value (e.g. the post-smoothing/post-fusion score) so the
+    displayed label always matches whatever number it sits next to on screen.
+    """
+    if wetness < 20:
+        return "Dry"
+    elif wetness < 40:
+        return "Damp (light)"
+    elif wetness < 70:
+        return "Damp/Wet"
+    else:
+        return "Wet"
