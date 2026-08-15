@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Panel from '../shared/Panel'
 import Badge from '../shared/Badge'
 import ZoneOverlay from './ZoneOverlay'
+import { Camera } from 'lucide-react'
 
 export default function LiveFeed({ onFrame, zones }) {
   const videoRef = useRef(null)
@@ -43,7 +44,10 @@ export default function LiveFeed({ onFrame, zones }) {
   return (
     <Panel className="p-4">
       <div className="flex justify-between items-center mb-3">
-        <span className="font-telemetry text-xs" style={{ color: 'var(--ts-text-dim)' }}>LIVE FEED</span>
+        <span className="font-telemetry text-xs flex items-center gap-1.5" style={{ color: 'var(--ts-text-dim)' }}>
+          <Camera size={13} strokeWidth={2} />
+          LIVE FEED
+        </span>
         <Badge variant={status === 'live' ? 'ok' : status === 'connecting' ? 'neutral' : 'danger'}>
           {status}
         </Badge>

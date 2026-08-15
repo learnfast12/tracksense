@@ -3,12 +3,14 @@ import Panel from '../shared/Panel'
 import Badge from '../shared/Badge'
 import AnimatedNumber from '../shared/AnimatedNumber'
 import Skeleton from '../shared/Skeleton'
+import { Gauge, Disc } from 'lucide-react'
 
 export default function StrategyCard({ strategy }) {
   if (!strategy) {
     return (
       <Panel className="p-6 text-center" glow>
-        <div className="font-telemetry text-xs mb-3" style={{ color: 'var(--ts-text-dim)' }}>
+        <div className="font-telemetry text-xs mb-3 flex items-center justify-center gap-1.5" style={{ color: 'var(--ts-text-dim)' }}>
+          <Gauge size={13} strokeWidth={2} />
           STRATEGY RECOMMENDATION
         </div>
         <div className="flex justify-center mb-3">
@@ -28,7 +30,8 @@ export default function StrategyCard({ strategy }) {
 
   return (
     <Panel className="p-6 text-center" glow>
-      <div className="font-telemetry text-xs mb-2" style={{ color: 'var(--ts-text-dim)' }}>
+      <div className="font-telemetry text-xs mb-2 flex items-center justify-center gap-1.5" style={{ color: 'var(--ts-text-dim)' }}>
+        <Gauge size={13} strokeWidth={2} />
         STRATEGY RECOMMENDATION
       </div>
 
@@ -39,9 +42,10 @@ export default function StrategyCard({ strategy }) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="font-telemetry text-2xl mb-2"
+          className="font-telemetry text-2xl mb-2 flex items-center justify-center gap-2"
           style={{ color: 'var(--ts-accent)' }}
         >
+          <Disc size={20} strokeWidth={2} />
           {tyre}
         </motion.div>
       </AnimatePresence>

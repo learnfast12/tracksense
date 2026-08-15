@@ -6,6 +6,7 @@ import StrategyCard from '../components/dashboard/StrategyCard'
 import BootSequence from '../components/boot/BootSequence'
 import TelemetryBackground from '../components/shared/TelemetryBackground'
 import ClockReadout from '../components/shared/ClockReadout'
+import { TriangleAlert } from 'lucide-react'
 import { analyzeFrame } from '../lib/api'
 
 export default function Dashboard() {
@@ -78,7 +79,7 @@ export default function Dashboard() {
             color: '#ff6b6b',
           }}
         >
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff6b6b', display: 'inline-block' }} />
+          <TriangleAlert size={14} strokeWidth={2} />
           BACKEND UNREACHABLE — check that uvicorn is running on :8000. Displaying last known readings.
         </div>
       )}

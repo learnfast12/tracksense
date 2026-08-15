@@ -3,6 +3,7 @@ import Panel from '../shared/Panel'
 import Badge from '../shared/Badge'
 import AnimatedNumber from '../shared/AnimatedNumber'
 import Skeleton from '../shared/Skeleton'
+import { Radar } from 'lucide-react'
 
 function zoneVariant(label) {
   if (label === 'Dry') return 'ok'
@@ -64,7 +65,10 @@ export default function ZoneMap({ zones }) {
 
   return (
     <Panel className="p-4">
-      <div className="font-telemetry text-xs mb-3" style={{ color: 'var(--ts-text-dim)' }}>ZONE READING</div>
+      <div className="font-telemetry text-xs mb-3 flex items-center gap-1.5" style={{ color: 'var(--ts-text-dim)' }}>
+        <Radar size={13} strokeWidth={2} />
+        ZONE READING
+      </div>
       <div className="space-y-2">
         {order.map(name =>
           hasData
