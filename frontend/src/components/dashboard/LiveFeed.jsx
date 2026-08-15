@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import Panel from '../shared/Panel'
 import Badge from '../shared/Badge'
+import ZoneOverlay from './ZoneOverlay'
 
-export default function LiveFeed({ onFrame }) {
+export default function LiveFeed({ onFrame, zones }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const [status, setStatus] = useState('connecting')
@@ -53,7 +54,8 @@ export default function LiveFeed({ onFrame }) {
 
         {status === 'live' && (
           <>
-            {/* Sweeping scan line */}
+            <ZoneOverlay zones={zones} />
+
             <div
               className="absolute left-0 w-full pointer-events-none"
               style={{
@@ -63,7 +65,6 @@ export default function LiveFeed({ onFrame }) {
                 animation: 'ts-scan-sweep 3s linear infinite',
               }}
             />
-            {/* Faint scanline texture overlay for telemetry feel */}
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
@@ -71,7 +72,6 @@ export default function LiveFeed({ onFrame }) {
                   'repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 3px)',
               }}
             />
-            {/* Corner brackets — telemetry framing */}
             <div className="absolute inset-2 pointer-events-none" style={{ border: '1px solid rgba(255,255,255,0.08)' }} />
           </>
         )}

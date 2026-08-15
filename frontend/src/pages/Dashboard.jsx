@@ -85,7 +85,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2 space-y-6">
-          <LiveFeed onFrame={handleFrame} />
+          <LiveFeed onFrame={handleFrame} zones={zones} />
           <TrendGraph history={history} />
         </div>
         <div className="space-y-6">
