@@ -1,21 +1,50 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 
+const CAR_COLORS = ['#00FFB2', '#FF3B3B', '#3B82F6', '#FBBF24', '#A855F7', '#FF7A00']
+
+// Staggered starting grid — alternating rows offset horizontally, like a real F1 grid.
+// top: vertical lane (% of grid container height), xOffset: how far back this car
+// starts relative to the front row (creates the grid stagger look).
+const GRID_LAYOUT = [
+  { top: 12, xOffset: 0 },
+  { top: 28, xOffset: 46 },
+  { top: 44, xOffset: 0 },
+  { top: 60, xOffset: 46 },
+  { top: 76, xOffset: 0 },
+  { top: 92, xOffset: 46 },
+]
+
+function CarSVG({ color }) {
+  return (
+    <svg width="64" height="24" viewBox="0 0 70 26">
+      <rect x="10" y="10" width="42" height="8" rx="3" fill={color} />
+      <rect x="2" y="13" width="10" height="3" rx="1.5" fill={color} />
+      <rect x="52" y="8" width="4" height="12" rx="1" fill={color} />
+      <rect x="56" y="6" width="10" height="3" rx="1" fill="rgba(255,255,255,0.7)" />
+      <circle cx="18" cy="20" r="5" fill="#0a0a0a" stroke={color} strokeWidth="1.5" />
+      <circle cx="48" cy="20" r="5" fill="#0a0a0a" stroke={color} strokeWidth="1.5" />
+      <rect x="26" y="4" width="10" height="7" rx="2" fill="rgba(255,255,255,0.9)" />
+    </svg>
+  )
+}
+
 export default function BootSequence({ onComplete, playKey }) {
   const overlayRef = useRef(null)
   const logoRef = useRef(null)
   const subRef = useRef(null)
 
-  // Stage A — F1 lights-out + car launch
+  // Stage A — full-grid F1 lights-out launch
   const stageARef = useRef(null)
   const lightRefs = useRef([])
   const goFlashRef = useRef(null)
+  const screenFlashRef = useRef(null)
   const flagRef = useRef(null)
-  const carTrackRef = useRef(null)
-  const carRef = useRef(null)
-  const carTrailRef = useRef(null)
+  const gridRef = useRef(null)
+  const carRefs = useRef([])
+  const trailRefs = useRef([])
 
-  // Stage B — existing track/zone boot
+  // Stage B — track/zone boot
   const stageBRef = useRef(null)
   const trackPathRef = useRef(null)
   const zoneRefs = useRef([])
@@ -46,8 +75,12 @@ export default function BootSequence({ onComplete, playKey }) {
     gsap.set(stageARef.current, { opacity: 1, display: 'flex' })
     gsap.set(lightRefs.current, { opacity: 0.15, scale: 1 })
     gsap.set(goFlashRef.current, { opacity: 0 })
-    gsap.set(carRef.current, { x: -120 })
-    gsap.set(carTrailRef.current, { scaleX: 0, opacity: 0.5 })
+    gsap.set(screenFlashRef.current, { opacity: 0 })
+
+    GRID_LAYOUT.forEach((pos, i) => {
+      gsap.set(carRefs.current[i], { x: pos.xOffset, opacity: 0, scale: 0.9 })
+      gsap.set(trailRefs.current[i], { scaleX: 0, opacity: 0 })
+    })
 
     gsap.set(stageBRef.current, { opacity: 0 })
     gsap.set(zoneRefs.current, { opacity: 0.15 })
@@ -61,35 +94,46 @@ export default function BootSequence({ onComplete, playKey }) {
       strokeDashoffset: pathLength,
     })
 
-    const carTravel = () => (carTrackRef.current?.offsetWidth || 700) + 160
+    const travelDistance = () => (gridRef.current?.offsetWidth || 900) + 200
 
     // ---- timeline ----
-    tl.to(logoRef.current, { opacity: 1, y: 0, duration: 0.7 })
-      .to(subRef.current, { opacity: 1, duration: 0.5 }, '-=0.2')
+    tl.to(logoRef.current, { opacity: 1, y: 0, duration: 0.6 })
+      .to(subRef.current, { opacity: 1, duration: 0.4 }, '-=0.15')
 
-      // lights igniting one by one — classic F1 start
-      .to(lightRefs.current[0], { opacity: 1, duration: 0.22 }, '+=0.2')
-      .to(lightRefs.current[1], { opacity: 1, duration: 0.22 }, '+=0.18')
-      .to(lightRefs.current[2], { opacity: 1, duration: 0.22 }, '+=0.18')
-      .to(lightRefs.current[3], { opacity: 1, duration: 0.22 }, '+=0.18')
-      .to(lightRefs.current[4], { opacity: 1, duration: 0.22 }, '+=0.18')
+      // cars roll onto the grid
+      .to(carRefs.current, { opacity: 1, scale: 1, duration: 0.4, stagger: 0.05 }, '+=0.1')
 
-      // hold — the "anticipation" beat
-      .to({}, { duration: 0.55 })
+      // lights igniting one by one
+      .to(lightRefs.current[0], { opacity: 1, duration: 0.2 }, '+=0.25')
+      .to(lightRefs.current[1], { opacity: 1, duration: 0.2 }, '+=0.16')
+      .to(lightRefs.current[2], { opacity: 1, duration: 0.2 }, '+=0.16')
+      .to(lightRefs.current[3], { opacity: 1, duration: 0.2 }, '+=0.16')
+      .to(lightRefs.current[4], { opacity: 1, duration: 0.2 }, '+=0.16')
 
-      // LIGHTS OUT — all go dark instantly, GO flash, flag waves
-      .to(lightRefs.current, { opacity: 0.12, duration: 0.08, ease: 'power4.in' })
-      .to(goFlashRef.current, { opacity: 1, duration: 0.15 }, '<')
-      .to(flagRef.current, { rotate: -8, duration: 0.12, ease: 'power1.inOut' }, '<')
-      .to(flagRef.current, { rotate: 8, duration: 0.24, ease: 'power1.inOut', repeat: 2, yoyo: true }, '<')
+      // anticipation hold
+      .to({}, { duration: 0.5 })
 
-      // car launches across the screen
-      .to(carTrailRef.current, { scaleX: 1, opacity: 0, duration: 1.1, ease: 'power2.in' }, '-=0.05')
-      .to(carRef.current, { x: carTravel, duration: 1.05, ease: 'power2.in' }, '<')
-      .to(goFlashRef.current, { opacity: 0, duration: 0.3 }, '-=0.6')
+      // LIGHTS OUT — screen flash, GO, flag wave
+      .to(lightRefs.current, { opacity: 0.12, duration: 0.06, ease: 'power4.in' })
+      .to(screenFlashRef.current, { opacity: 0.55, duration: 0.06 }, '<')
+      .to(screenFlashRef.current, { opacity: 0, duration: 0.4, ease: 'power2.out' }, '+=0.02')
+      .to(goFlashRef.current, { opacity: 1, duration: 0.12 }, '<')
+      .to(flagRef.current, { rotate: -10, duration: 0.1, ease: 'power1.inOut' }, '<')
+      .to(flagRef.current, { rotate: 10, duration: 0.22, ease: 'power1.inOut', repeat: 2, yoyo: true }, '<')
+
+      // camera shake punch on launch
+      .to(overlay, { x: -6, duration: 0.05 }, '<')
+      .to(overlay, { x: 6, duration: 0.05 })
+      .to(overlay, { x: 0, duration: 0.05 })
+
+      // full grid launches — trails first, cars streak across full width,
+      // slight stagger per car so it reads as a real rolling start, not a sync'd wall
+      .to(trailRefs.current, { scaleX: 1, opacity: 0.6, duration: 1.0, stagger: 0.04, ease: 'power2.in' }, '-=0.05')
+      .to(carRefs.current, { x: travelDistance, duration: 1.15, stagger: 0.04, ease: 'power2.in' }, '<')
+      .to(goFlashRef.current, { opacity: 0, duration: 0.25 }, '-=0.7')
 
       // hand off to track-mapping stage
-      .to(stageARef.current, { opacity: 0, duration: 0.35 }, '-=0.1')
+      .to(stageARef.current, { opacity: 0, duration: 0.35 }, '-=0.15')
       .set(stageARef.current, { display: 'none' })
       .to(stageBRef.current, { opacity: 1, duration: 0.35 })
 
@@ -101,7 +145,7 @@ export default function BootSequence({ onComplete, playKey }) {
       .to(barFillRef.current, { scaleX: 1, duration: 1.1, ease: 'power1.inOut' }, '-=0.1')
       .to(statusRef.current, { opacity: 0, duration: 0.3 }, '+=0.3')
       .to(finalRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.1')
-      .to({}, { duration: 0.9 }) // hold on final message before fade
+      .to({}, { duration: 0.9 })
 
     return () => tl.kill()
   }, [playKey, onComplete])
@@ -109,29 +153,36 @@ export default function BootSequence({ onComplete, playKey }) {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex-col items-center justify-center"
+      className="fixed inset-0 z-50 flex-col items-center justify-center overflow-hidden"
       style={{ background: 'var(--ts-bg)', display: 'none' }}
     >
-      <div ref={logoRef} className="font-telemetry text-4xl tracking-widest mb-2" style={{ color: 'var(--ts-text-primary)' }}>
+      {/* full-screen flash on lights-out */}
+      <div
+        ref={screenFlashRef}
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.9), transparent 70%)' }}
+      />
+
+      <div ref={logoRef} className="font-telemetry text-4xl tracking-widest mb-1 z-10" style={{ color: 'var(--ts-text-primary)' }}>
         TRACKSENSE
       </div>
-      <div ref={subRef} className="font-telemetry text-xs tracking-[0.3em] mb-10" style={{ color: 'var(--ts-text-dim)' }}>
+      <div ref={subRef} className="font-telemetry text-xs tracking-[0.3em] mb-4 z-10" style={{ color: 'var(--ts-text-dim)' }}>
         LIVE TRACK CONDITION INTELLIGENCE
       </div>
 
-      {/* ---- STAGE A: F1 lights-out + car launch ---- */}
-      <div ref={stageARef} className="flex-col items-center" style={{ display: 'none' }}>
-        <div className="relative flex items-center gap-6 mb-2">
+      {/* ---- STAGE A: full-grid F1 lights-out launch ---- */}
+      <div ref={stageARef} className="flex-col items-center w-full flex-1 justify-center" style={{ display: 'none' }}>
+        <div className="relative flex items-center gap-6 mb-6 z-10">
           {[0, 1, 2, 3, 4].map(i => (
             <div
               key={i}
               ref={el => (lightRefs.current[i] = el)}
               style={{
-                width: 22,
-                height: 22,
+                width: 26,
+                height: 26,
                 borderRadius: '50%',
                 background: '#ff2b2b',
-                boxShadow: '0 0 14px #ff2b2b, 0 0 4px #ff2b2b inset',
+                boxShadow: '0 0 18px #ff2b2b, 0 0 5px #ff2b2b inset',
               }}
             />
           ))}
@@ -139,49 +190,45 @@ export default function BootSequence({ onComplete, playKey }) {
             ref={flagRef}
             className="absolute"
             style={{
-              right: -52,
-              top: -6,
-              width: 26,
-              height: 20,
+              right: -56,
+              top: -8,
+              width: 30,
+              height: 24,
               transformOrigin: 'left center',
               clipPath: 'polygon(0 0, 100% 0, 82% 50%, 100% 100%, 0 100%)',
-              background:
-                'repeating-conic-gradient(#e8e8e8 0% 25%, #111 0% 50%) 0 0 / 8px 8px',
+              background: 'repeating-conic-gradient(#e8e8e8 0% 25%, #111 0% 50%) 0 0 / 9px 9px',
             }}
           />
         </div>
 
         <div
           ref={goFlashRef}
-          className="font-telemetry text-sm tracking-[0.4em] mb-2"
-          style={{ color: 'var(--ts-accent)' }}
+          className="font-telemetry text-lg tracking-[0.5em] mb-4 z-10"
+          style={{ color: 'var(--ts-accent)', textShadow: '0 0 20px var(--ts-accent)' }}
         >
           GO
         </div>
 
-        <div ref={carTrackRef} className="relative w-full max-w-[700px] h-10 mt-2">
-          <div
-            ref={carTrailRef}
-            className="absolute left-0 top-1/2 -translate-y-1/2"
-            style={{
-              height: 3,
-              width: '60%',
-              transformOrigin: 'left center',
-              background: 'linear-gradient(90deg, transparent, var(--ts-accent))',
-              filter: 'blur(1px)',
-            }}
-          />
-          <div ref={carRef} className="absolute left-0 top-1/2 -translate-y-1/2">
-            <svg width="70" height="26" viewBox="0 0 70 26">
-              <rect x="10" y="10" width="42" height="8" rx="3" fill="var(--ts-accent)" />
-              <rect x="2" y="13" width="10" height="3" rx="1.5" fill="var(--ts-accent)" />
-              <rect x="52" y="8" width="4" height="12" rx="1" fill="var(--ts-accent)" />
-              <rect x="56" y="6" width="10" height="3" rx="1" fill="var(--ts-text-dim)" />
-              <circle cx="18" cy="20" r="5" fill="#111" stroke="var(--ts-accent)" strokeWidth="1.5" />
-              <circle cx="48" cy="20" r="5" fill="#111" stroke="var(--ts-accent)" strokeWidth="1.5" />
-              <rect x="26" y="4" width="10" height="7" rx="2" fill="var(--ts-text-primary)" opacity="0.85" />
-            </svg>
-          </div>
+        <div ref={gridRef} className="relative w-full flex-1 max-h-[260px] overflow-hidden">
+          {GRID_LAYOUT.map((pos, i) => (
+            <div key={i} className="absolute" style={{ top: `${pos.top}%`, left: pos.xOffset }}>
+              <div
+                ref={el => (trailRefs.current[i] = el)}
+                className="absolute top-1/2 -translate-y-1/2"
+                style={{
+                  right: '100%',
+                  height: 3,
+                  width: 160,
+                  transformOrigin: 'right center',
+                  background: `linear-gradient(90deg, transparent, ${CAR_COLORS[i]})`,
+                  filter: 'blur(1.5px)',
+                }}
+              />
+              <div ref={el => (carRefs.current[i] = el)}>
+                <CarSVG color={CAR_COLORS[i]} />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
