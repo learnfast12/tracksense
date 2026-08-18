@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import analyze, trend
+from app.routers import analyze, trend, simulate
 
 app = FastAPI(title="TrackSense API")
 
@@ -14,6 +14,7 @@ app.add_middleware(
 
 app.include_router(analyze.router)
 app.include_router(trend.router)
+app.include_router(simulate.router)
 
 @app.get("/health")
 def health():

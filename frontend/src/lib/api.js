@@ -15,3 +15,13 @@ export async function getTrend() {
   const res = await api.get('/trend')
   return res.data
 }
+
+export async function simulateReset() {
+  const res = await api.post('/simulate/reset')
+  return res.data
+}
+
+export async function simulateStep(index) {
+  const res = await api.post('/simulate/step', null, { params: { index } })
+  return res.data
+}

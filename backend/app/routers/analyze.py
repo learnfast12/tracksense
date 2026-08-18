@@ -30,11 +30,12 @@ async def analyze_frame(file: UploadFile = File(...)):
             continue
 
         result = compute_wetness_score(crop)
+        vision_score = result["wetness_score"]
         raw_thermal = simulate_thermal_score(crop)
 
         # Smooth both raw signals before fusion — kills frame-to-frame
         # sensor/lighting noise while still tracking real trend changes.
-        smoothed_vision = smooth(f"{name}_vision", result["wetness_score"])
+        smoothed_vision = smooth(f"{name}_vision", vision_score)
         smoothed_thermal = smooth(f"{name}_thermal", raw_thermal)
 
         fusion = fuse_signals(smoothed_vision, smoothed_thermal)

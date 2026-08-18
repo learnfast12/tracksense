@@ -7,7 +7,7 @@ import BootSequence from '../components/boot/BootSequence'
 import TelemetryBackground from '../components/shared/TelemetryBackground'
 import ClockReadout from '../components/shared/ClockReadout'
 import { TriangleAlert } from 'lucide-react'
-import { analyzeFrame } from '../lib/api'
+import { analyzeFrame, simulateReset, simulateStep } from '../lib/api'
 
 export default function Dashboard() {
   const [zones, setZones] = useState(null)
@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [playKey, setPlayKey] = useState(0)
   const [backendStatus, setBackendStatus] = useState('unknown') // 'unknown' | 'ok' | 'error'
   const [consecutiveFailures, setConsecutiveFailures] = useState(0)
+  const [demoRunning, setDemoRunning] = useState(false)
 
   const handleFrame = useCallback(async (blob) => {
     try {
@@ -43,6 +44,28 @@ export default function Dashboard() {
     }
   }, [])
 
+  const runTrendDemo = useCallback(async () => {
+    if (demoRunning) return
+    setDemoRunning(true)
+    try {
+      await simulateReset()
+      setHistory([])
+      for (let i = 0; i < 12; i++) {
+        const data = await simulateStep(i)
+        setStrategy(data.strategy)
+        setHistory(prev => [...prev.slice(-29), {
+          t: Date.now(),
+          racing_line: data.wetness,
+        }])
+        await new Promise(r => setTimeout(r, 1100))
+      }
+    } catch (err) {
+      console.error('trend demo failed', err)
+    } finally {
+      setDemoRunning(false)
+    }
+  }, [demoRunning])
+
   const handleBootComplete = useCallback(() => setBooting(false), [])
   const replayBoot = () => {
     setBooting(true)
@@ -67,8 +90,33 @@ export default function Dashboard() {
           >
             ▶ REPLAY INTRO
           </button>
+          <button
+            onClick={runTrendDemo}
+            disabled={demoRunning}
+            className="font-telemetry text-xs px-3 py-1.5 rounded border tracking-wider"
+            style={{
+              borderColor: 'var(--ts-accent)',
+              color: demoRunning ? 'var(--ts-text-dim)' : 'var(--ts-accent)',
+              opacity: demoRunning ? 0.6 : 1,
+            }}
+          >
+            {demoRunning ? '● RUNNING TREND DEMO…' : '▶ RUN TREND DEMO'}
+          </button>
         </div>
       </div>
+
+      {demoRunning && (
+        <div
+          className="mb-6 px-4 py-3 rounded font-telemetry text-xs tracking-wider flex items-center gap-2"
+          style={{
+            background: 'rgba(79,209,197,0.08)',
+            border: '1px solid var(--ts-accent)',
+            color: 'var(--ts-accent)',
+          }}
+        >
+          ● SIMULATED DATA — scripted wetness curve demonstrating the trend/strategy engine, not live vision
+        </div>
+      )}
 
       {backendStatus === 'error' && (
         <div
